@@ -2,12 +2,14 @@
 using Microsoft.EntityFrameworkCore;
 using WebApiApp.Models;
 using WebApiApp.Data;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace WebApiApp.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class UserController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -27,12 +29,12 @@ namespace WebApiApp.Controllers
 
         // GET: api/users/{id}
         [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUserById(int id)
+        public async Task<ActionResult<User>> GetUserById(Guid id)
         {
             var user = await _context.Users.FindAsync(id);
             if (user == null)
             {
-                return NotFound();
+                throw new KeyNotFoundException("User not found");
             }
             return Ok(user);
         }
@@ -60,12 +62,12 @@ namespace WebApiApp.Controllers
         // Удалить пользователя по ID
 
         [HttpDelete("{id}")]
-        public async Task<ActionResult> DeleteUser(int id)
+        public async Task<ActionResult> DeleteUser(Guid id)
         {
             var user = await _context.Users.FindAsync(id);
             if (user == null)
             {
-                return NotFound();
+                throw new KeyNotFoundException("User not found");
             }
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
@@ -75,7 +77,7 @@ namespace WebApiApp.Controllers
 
         // Обновить пользователя по ID
         [HttpPut("{id}")]
-        public async Task<ActionResult> UpdateUser(int id, [FromBody] User updateUser)
+        public async Task<ActionResult> UpdateUser(Guid id, [FromBody] User updateUser)
         { 
             if (!ModelState.IsValid)
             {
@@ -84,7 +86,7 @@ namespace WebApiApp.Controllers
             var user = await _context.Users.FindAsync(id);
             if (user == null)
             {
-                return NotFound();
+                throw new KeyNotFoundException("User not found");
             }
 
             if ( await _context.Users.AnyAsync(u => u.Email == updateUser.Email && u.Id != id))
