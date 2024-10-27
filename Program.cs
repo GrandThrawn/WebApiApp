@@ -6,8 +6,12 @@ using WebApiApp.Services;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using WebApiApp.Middleware;
+using WebApiApp.Interfaces;
+using WebApiApp.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
+
+
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -25,6 +29,14 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 //coonection to db
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
+//email
+var smtpConfig = builder.Configuration.GetSection("Smtp").Get<SmtpConfig>();
+builder.Services.AddSingleton<IEmailSender>(new EmailSender(
+    smtpConfig.Server,
+    int.Parse(smtpConfig.Port),
+    smtpConfig.User,
+    smtpConfig.Pass
+));
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
